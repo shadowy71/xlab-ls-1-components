@@ -1,0 +1,214 @@
+/* ============================================================
+   CHAPTER 2: LASER & OPTICAL FIBRE — SHARED LAB STYLES
+   Uses global design tokens from index.html
+   ============================================================ */
+
+/* Chapter 2 Overview Strip (discoverability without extra nav level) */
+.ch2-overview{
+  margin-bottom:18px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius-lg); box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.ch2-overview-head{
+  width:100%; padding:11px 18px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  background:transparent; border:none; color:var(--text);
+  font-family:inherit; font-size:.84rem; font-weight:500;
+  cursor:pointer; text-align:left;
+  transition:background-color .16s ease;
+}
+.ch2-overview-head:hover{background:var(--surface-hover)}
+.ch2-overview-head:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+.ch2-overview-title{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+.ch2-badge{
+  display:inline-flex; align-items:center; gap:5px;
+  padding:2px 8px; border-radius:999px;
+  font-size:.7rem; font-weight:600; letter-spacing:.02em;
+  color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent-border);
+}
+.ch2-overview-sub{color:var(--text2); font-size:.78rem; font-weight:400}
+.ch2-overview-chev{
+  width:16px; height:16px; color:var(--text2); flex:0 0 auto;
+  display:inline-flex; align-items:center; justify-content:center;
+  transition:transform .22s ease, color .2s ease;
+}
+.ch2-overview.open .ch2-overview-chev{transform:rotate(180deg); color:var(--accent)}
+
+.ch2-overview-body{
+  max-height:0; overflow:hidden;
+  transition:max-height .32s cubic-bezier(.2,.8,.3,1);
+}
+.ch2-overview-grid{
+  padding:12px 16px 16px; border-top:1px solid var(--divider);
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(195px, 1fr)); gap:8px;
+}
+.ch2-ov-card{
+  display:flex; flex-direction:column; gap:4px; align-items:flex-start;
+  padding:10px 12px; border-radius:var(--radius-md);
+  background:var(--recessed); border:1px solid var(--border);
+  color:var(--text); text-align:left; cursor:pointer; font-family:inherit;
+  transition:border-color .16s ease, background-color .16s ease;
+}
+.ch2-ov-card:hover{background:var(--surface-hover); border-color:var(--border-strong)}
+.ch2-ov-card.active{background:var(--accent-soft); border-color:var(--accent-border)}
+.ch2-ov-card:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+.ch2-ov-num{
+  font-family:var(--font-mono); font-size:.69rem; font-weight:600;
+  color:var(--accent); letter-spacing:.02em;
+}
+.ch2-ov-name{font-size:.8rem; font-weight:600; color:var(--text); line-height:1.25}
+.ch2-ov-lesson{font-size:.72rem; color:var(--text2); line-height:1.3}
+
+/* Panel Header Entry Chips */
+.panel-head-row{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap;
+}
+.panel-head-actions{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding-top:2px;
+}
+.ch2-chip-btn{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 11px; border-radius:var(--radius-md);
+  font-family:inherit; font-size:.77rem; font-weight:500;
+  color:var(--text2); background:var(--surface); border:1px solid var(--border);
+  cursor:pointer; transition:color .16s ease, background-color .16s ease, border-color .16s ease;
+}
+.ch2-chip-btn:hover{color:var(--text); background:var(--surface-hover); border-color:var(--border-strong)}
+.ch2-chip-btn.primary{color:var(--accent); background:var(--accent-soft); border-color:var(--accent-border)}
+.ch2-chip-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+/* SVG Lab Stage (matches canvas.viz dark optical bench styling) */
+.viz-svg{
+  width:100%; min-height:400px; height:520px; border-radius:10px; display:block;
+  background:linear-gradient(160deg, rgba(8,8,26,.92), rgba(16,16,48,.92));
+  border:1px solid rgba(255,255,255,.1);
+  user-select:none;
+}
+body.light .viz-svg{filter:none}
+
+/* Live Process Explanation Banner under Visualization Stage */
+.sim-banner{
+  margin:0 16px 14px; padding:10px 14px;
+  border-radius:var(--radius-md);
+  background:var(--recessed); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+}
+.sim-banner-main{
+  display:flex; align-items:center; gap:9px; min-width:0; flex:1;
+}
+.sim-banner-tag{
+  flex:0 0 auto; padding:2px 7px; border-radius:var(--radius-sm);
+  font-family:var(--font-mono); font-size:.7rem; font-weight:600;
+  color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent-border);
+}
+.sim-banner-tag.ok{color:var(--success); background:rgba(52,211,153,.12); border-color:rgba(52,211,153,.35)}
+.sim-banner-tag.warn{color:var(--warning); background:rgba(224,140,58,.12); border-color:rgba(224,140,58,.35)}
+.sim-banner-text{
+  font-size:.8rem; color:var(--text2); line-height:1.45;
+}
+.sim-banner-text b{color:var(--text); font-weight:600}
+
+/* Sub-tabs inside canvas header or top of simulation */
+.ch2-subtabs{
+  display:flex; gap:4px; flex-wrap:wrap;
+  padding:8px 16px 0;
+}
+.ch2-subtab{
+  padding:6px 12px; border-radius:var(--radius-sm);
+  font-family:inherit; font-size:.77rem; font-weight:500;
+  color:var(--text2); background:var(--recessed); border:1px solid var(--border);
+  cursor:pointer; transition:color .16s ease, background-color .16s ease, border-color .16s ease;
+}
+.ch2-subtab:hover:not(.active){color:var(--text); background:var(--surface-hover)}
+.ch2-subtab.active{color:var(--accent); background:var(--accent-soft); border-color:var(--accent-border); font-weight:600}
+.ch2-subtab:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+
+/* Transport Controls Row & Action Buttons inside Inspector */
+.transport-row{
+  display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:6px;
+}
+.transport-row.two{grid-template-columns:repeat(2, minmax(0,1fr))}
+.ctrl-btn{
+  padding:7px 10px; border-radius:var(--radius-md);
+  font-family:inherit; font-size:.78rem; font-weight:500;
+  color:var(--text); background:var(--recessed); border:1px solid var(--border-strong);
+  cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:5px;
+  transition:color .16s ease, background-color .16s ease, border-color .16s ease;
+}
+.ctrl-btn:hover:not(:disabled){background:var(--surface-hover); border-color:var(--accent-border)}
+.ctrl-btn.primary{
+  color:var(--accent); background:var(--accent-soft); border-color:var(--accent-border); font-weight:600;
+}
+.ctrl-btn.active{
+  color:var(--success); background:rgba(52,211,153,.12); border-color:rgba(52,211,153,.4); font-weight:600;
+}
+.ctrl-btn:disabled{opacity:.42; cursor:not-allowed}
+.ctrl-btn:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+
+/* Text / Bit Sequence Input */
+.ch2-text-input{
+  width:100%; padding:7px 10px; border-radius:var(--radius-md);
+  border:1px solid var(--border-strong); background:var(--recessed); color:var(--text);
+  font-family:var(--font-mono); font-size:.86rem; letter-spacing:.08em;
+  transition:border-color .16s ease;
+}
+.ch2-text-input:focus{outline:none; border-color:var(--accent)}
+.ch2-input-hint{font-size:.72rem; color:var(--text3); margin-top:2px}
+
+.ctrl-divider{height:1px; background:var(--divider); margin:2px 0}
+.ctrl-note{
+  font-size:.73rem; color:var(--text3); line-height:1.45;
+  padding:8px 10px; border-radius:var(--radius-sm);
+  background:var(--recessed); border:1px solid var(--divider);
+}
+.ctrl-note b{color:var(--text2); font-weight:600}
+
+/* Theory Accordion Interactive Entry Points */
+.theory-entry-row{
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+  margin-top:14px; padding-top:12px; border-top:1px solid var(--divider);
+}
+.theory-entry-label{
+  font-size:.76rem; font-weight:600; color:var(--text); margin-right:4px;
+}
+.btn-lab-launch{
+  padding:5px 11px; border-radius:var(--radius-md);
+  font-family:inherit; font-size:.76rem; font-weight:500;
+  color:var(--accent); background:var(--accent-soft); border:1px solid var(--accent-border);
+  cursor:pointer; transition:background-color .16s ease, border-color .16s ease;
+}
+.btn-lab-launch:hover{background:rgba(34,211,238,.18)}
+.btn-lab-launch:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+
+/* Responsive overrides matching Chapter 1 breakpoints */
+@media (max-width:1024px){
+  .viz-svg{height:440px; min-height:340px}
+}
+@media (max-width:768px){
+  .viz-svg{height:380px; min-height:300px}
+}
+@media (max-width:640px){
+  .ch-sub{display:none}
+  .viz-svg{height:400px; min-height:320px}
+  .sim-banner{margin:0 12px 12px; padding:8px 10px}
+  .ch2-subtabs{padding:8px 12px 0}
+}
+@media (max-width:480px){
+  .viz-svg{height:360px; min-height:300px}
+  .ch2-overview-grid{grid-template-columns:1fr}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .ch2-overview-body,
+  .ch2-overview-chev,
+  .ch2-overview-head,
+  .ch2-ov-card,
+  .ch2-chip-btn,
+  .ch2-subtab,
+  .ctrl-btn,
+  .btn-lab-launch{
+    transition:none !important;
+  }
+}
+
