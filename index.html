@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Semiconductor Physics Interactive Simulator</title>
+<title>Engineering Physics Interactive Simulator</title>
 <style>
 /* ============================================================
    SEMICONDUCTOR PHYSICS SIMULATOR — GLOBAL DESIGN SYSTEM
@@ -467,6 +467,7 @@ select:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border
   .panel-head h2{font-size:1.2rem}
 }
 </style>
+<link rel="stylesheet" href="src/ch2/ch2.css">
 </head>
 <body>
 
@@ -481,11 +482,11 @@ select:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border
           <circle cx="10" cy="10" r="1.7" fill="currentColor" stroke="none"/>
         </svg>
       </span>
-      <span>Semiconductor Physics <span class="logo-sub">Simulator</span></span>
+      <span id="brandTitle">Semiconductor Physics <span class="logo-sub">Simulator</span></span>
     </div>
     <div class="chapter-tabs">
-      <button class="chapter-tab active" data-chapter="1">Chapter 1: Semiconductor Physics</button>
-      <button class="chapter-tab disabled" title="Coming soon" disabled>Chapter 2</button>
+      <button class="chapter-tab active" data-chapter="1">Chapter 1<span class="ch-sub">: Semiconductor Physics</span></button>
+      <button class="chapter-tab" data-chapter="2">Chapter 2<span class="ch-sub">: LASER &amp; Optical Fibre</span></button>
       <button class="chapter-tab disabled" title="Coming soon" disabled>Chapter 3</button>
     </div>
     <div class="nav-actions">
@@ -575,6 +576,10 @@ function setupCanvas(canvas){
   return { canvas, ctx, w:rect.width, h:rect.height };
 }
 function refreshCanvases(){
+  if(activeChapter === 2 && window.Ch2Platform){
+    window.Ch2Platform.resize();
+    return;
+  }
   for(const id in canvases){ const c=canvases[id]; if(!c.canvas.offsetParent && c.canvas.closest('.panel') && !c.canvas.closest('.panel').classList.contains('active')) continue; Object.assign(c, setupCanvas(c.canvas)); }
 }
 new ResizeObserver(()=>refreshCanvases()).observe(document.body);
@@ -701,6 +706,22 @@ const TOPICS = [
   { id:'t7', name:'Conductivity',        title:'Electrical Conductivity & Charge Transport', desc:'Random thermal motion plus drift in an electric field gives σ = e(nμₑ + pμₕ).', canvasTitle:'Drift-Diffusion Current Simulator' },
 ];
 let activeTopic = 't1';
+let activeChapter = 1;
+
+function renderCh1Pills(){
+  pillBar.innerHTML='';
+  pillBar.setAttribute('aria-label', 'Chapter 1 topics');
+  TOPICS.forEach(t=>{
+    const pill = el('button','pill'+(t.id===activeTopic?' active':''), `<span class="pill-icon" aria-hidden="true">${TOPIC_ICONS[t.id]}</span><span>${t.name}</span>`);
+    pill.setAttribute('role','tab');
+    pill.setAttribute('aria-selected', t.id===activeTopic ? 'true':'false');
+    pill.setAttribute('aria-controls','panel-'+t.id);
+    pill.tabIndex = t.id===activeTopic ? 0 : -1;
+    pill.dataset.topic=t.id;
+    pill.addEventListener('click', ()=>switchTopic(t.id));
+    pillBar.append(pill);
+  });
+}
 
 function buildPanels(){
   TOPICS.forEach(t=>{
@@ -732,15 +753,8 @@ function buildPanels(){
         <div class="accordion-body"><div class="accordion-body-inner"></div></div>
       </div>`;
     main.append(panel);
-    const pill = el('button','pill'+(t.id===activeTopic?' active':''), `<span class="pill-icon" aria-hidden="true">${TOPIC_ICONS[t.id]}</span><span>${t.name}</span>`);
-    pill.setAttribute('role','tab');
-    pill.setAttribute('aria-selected', t.id===activeTopic ? 'true':'false');
-    pill.setAttribute('aria-controls','panel-'+t.id);
-    pill.tabIndex = t.id===activeTopic ? 0 : -1;
-    pill.dataset.topic=t.id;
-    pill.addEventListener('click', ()=>switchTopic(t.id));
-    pillBar.append(pill);
   });
+  renderCh1Pills();
   document.querySelectorAll('.accordion-head').forEach(h=>{
     h.addEventListener('click', ()=>{
       const acc = h.parentElement; const body = acc.querySelector('.accordion-body');
@@ -752,6 +766,7 @@ function buildPanels(){
 }
 function switchTopic(id){
   activeTopic = id;
+  if(activeChapter !== 1) return;
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active', p.id==='panel-'+id));
   document.querySelectorAll('.pill').forEach(p=>{
     const on = p.dataset.topic===id;
@@ -765,6 +780,10 @@ function switchTopic(id){
 }
 /* keyboard navigation across topics: ← / → / Home / End */
 pillBar.addEventListener('keydown', (e)=>{
+  if(activeChapter === 2 && window.Ch2Platform){
+    window.Ch2Platform.handleKeydown(e);
+    return;
+  }
   const idx = TOPICS.findIndex(t=>t.id===activeTopic);
   let next = null;
   if(e.key==='ArrowRight') next = (idx+1)%TOPICS.length;
@@ -2733,12 +2752,51 @@ function animate(){
   const now = performance.now();
   const dt = Math.min((now-lastTime)/1000, 0.05);
   lastTime = now;
-  const upd = { t1:t1Update, t2:t2Update, t3:t3Update, t4:t4Update, t5:t5Update, t6:t6Update, t7:t7Update };
-  const ren = { t1:t1Render, t2:t2Render, t3:t3Render, t4:t4Render, t5:t5Render, t6:t6Render, t7:t7Render };
-  if(upd[activeTopic]) upd[activeTopic](dt);
-  if(ren[activeTopic]) ren[activeTopic]();
+  if(activeChapter === 2 && window.Ch2Platform){
+    window.Ch2Platform.tick(dt);
+  } else {
+    const upd = { t1:t1Update, t2:t2Update, t3:t3Update, t4:t4Update, t5:t5Update, t6:t6Update, t7:t7Update };
+    const ren = { t1:t1Render, t2:t2Render, t3:t3Render, t4:t4Render, t5:t5Render, t6:t6Render, t7:t7Render };
+    if(upd[activeTopic]) upd[activeTopic](dt);
+    if(ren[activeTopic]) ren[activeTopic]();
+  }
   requestAnimationFrame(animate);
 }
+
+/* ============================================================
+   CHAPTER SWITCHING & GLOBAL PLATFORM BRIDGE
+   ============================================================ */
+window.XLab = {
+  PHYSICS, MATERIALS, clamp, lerp, fmtSci, sup, fmt, wavelengthToColor,
+  el, buildSlider, buildToggle, buildSegmented, buildSelect, buildReadouts, setupCanvas,
+  switchChapter,
+};
+
+function switchChapter(ch){
+  const target = Number(ch);
+  if(target !== 1 && target !== 2) return;
+  activeChapter = target;
+  document.querySelectorAll('.chapter-tab[data-chapter]').forEach(btn=>{
+    btn.classList.toggle('active', Number(btn.dataset.chapter) === target);
+  });
+  const brand = document.getElementById('brandTitle');
+  if(target === 2){
+    if(brand) brand.innerHTML = 'LASER &amp; Optical Fibre <span class="logo-sub">Simulator</span>';
+    document.title = 'LASER & Optical Fibre — Interactive Simulator';
+    document.querySelectorAll('.panel:not(.ch2-panel)').forEach(p=>p.classList.remove('active'));
+    if(window.Ch2Platform) window.Ch2Platform.mount();
+  } else {
+    if(brand) brand.innerHTML = 'Semiconductor Physics <span class="logo-sub">Simulator</span>';
+    document.title = 'Semiconductor Physics Interactive Simulator';
+    if(window.Ch2Platform) window.Ch2Platform.unmount();
+    renderCh1Pills();
+    switchTopic(activeTopic);
+  }
+}
+
+document.querySelectorAll('.chapter-tab[data-chapter]').forEach(btn=>{
+  btn.addEventListener('click', ()=>switchChapter(btn.dataset.chapter));
+});
 
 /* ============================================================
    NAV / THEME / FULLSCREEN
@@ -2779,5 +2837,6 @@ requestAnimationFrame(()=>{
   requestAnimationFrame(animate);
 });
 </script>
+<script defer src="src/ch2/ch2-core.js"></script>
 </body>
 </html>
