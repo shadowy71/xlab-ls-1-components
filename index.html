@@ -469,6 +469,7 @@ select:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border
 </style>
 <link rel="stylesheet" href="src/ch2/ch2.css">
 <link rel="stylesheet" href="src/ch3/ch3.css">
+<link rel="stylesheet" href="src/ch5/ch5.css">
 </head>
 <body>
 
@@ -489,6 +490,7 @@ select:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border
       <button class="chapter-tab active" data-chapter="1">Chapter 1<span class="ch-sub">: Semiconductor Physics</span></button>
       <button class="chapter-tab" data-chapter="2">Chapter 2<span class="ch-sub">: LASER &amp; Optical Fibre</span></button>
       <button class="chapter-tab" data-chapter="3">Chapter 3<span class="ch-sub">: Quantum Mechanics</span></button>
+      <button class="chapter-tab" data-chapter="5">Chapter 5<span class="ch-sub">: Magnetism &amp; Superconductivity</span></button>
     </div>
     <div class="nav-actions">
       <button class="icon-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
@@ -585,6 +587,7 @@ function refreshCanvases(){
     window.Ch3Platform.resize();
     return;
   }
+  if(activeChapter === 5 && window.Ch5Platform){ window.Ch5Platform.resize(); return; }
   for(const id in canvases){ const c=canvases[id]; if(!c.canvas.offsetParent && c.canvas.closest('.panel') && !c.canvas.closest('.panel').classList.contains('active')) continue; Object.assign(c, setupCanvas(c.canvas)); }
 }
 new ResizeObserver(()=>refreshCanvases()).observe(document.body);
@@ -793,6 +796,7 @@ pillBar.addEventListener('keydown', (e)=>{
     window.Ch3Platform.handleKeydown(e);
     return;
   }
+  if(activeChapter === 5 && window.Ch5Platform){ window.Ch5Platform.handleKeydown(e); return; }
   const idx = TOPICS.findIndex(t=>t.id===activeTopic);
   let next = null;
   if(e.key==='ArrowRight') next = (idx+1)%TOPICS.length;
@@ -2765,6 +2769,8 @@ function animate(){
     window.Ch2Platform.tick(dt);
   } else if(activeChapter === 3 && window.Ch3Platform){
     window.Ch3Platform.tick(dt);
+  } else if(activeChapter === 5 && window.Ch5Platform){
+    window.Ch5Platform.tick(dt);
   } else {
     const upd = { t1:t1Update, t2:t2Update, t3:t3Update, t4:t4Update, t5:t5Update, t6:t6Update, t7:t7Update };
     const ren = { t1:t1Render, t2:t2Render, t3:t3Render, t4:t4Render, t5:t5Render, t6:t6Render, t7:t7Render };
@@ -2785,7 +2791,7 @@ window.XLab = {
 
 function switchChapter(ch){
   const target = Number(ch);
-  if(target !== 1 && target !== 2 && target !== 3) return;
+  if(target !== 1 && target !== 2 && target !== 3 && target !== 5) return;
   activeChapter = target;
   document.querySelectorAll('.chapter-tab[data-chapter]').forEach(btn=>{
     btn.classList.toggle('active', Number(btn.dataset.chapter) === target);
@@ -2796,14 +2802,24 @@ function switchChapter(ch){
     document.title = 'LASER & Optical Fibre — Interactive Simulator';
     document.querySelectorAll('.panel:not(.ch2-panel)').forEach(p=>p.classList.remove('active'));
     if(window.Ch3Platform) window.Ch3Platform.unmount();
+    if(window.Ch5Platform) window.Ch5Platform.unmount();
     if(window.Ch2Platform) window.Ch2Platform.mount();
   } else if(target === 3){
     if(brand) brand.innerHTML = 'Quantum Mechanics <span class="logo-sub">Simulator</span>';
     document.title = 'Quantum Mechanics — Interactive Simulator';
     document.querySelectorAll('.panel:not(.ch3-panel)').forEach(p=>p.classList.remove('active'));
     if(window.Ch2Platform) window.Ch2Platform.unmount();
+    if(window.Ch5Platform) window.Ch5Platform.unmount();
     if(window.Ch3Platform) window.Ch3Platform.mount();
+  } else if(target === 5){
+    if(brand) brand.innerHTML = 'Magnetism &amp; Superconductivity <span class="logo-sub">Simulator</span>';
+    document.title = 'Magnetism & Superconductivity — Interactive Simulator';
+    document.querySelectorAll('.panel:not(.ch5-panel)').forEach(p=>p.classList.remove('active'));
+    if(window.Ch2Platform) window.Ch2Platform.unmount();
+    if(window.Ch3Platform) window.Ch3Platform.unmount();
+    if(window.Ch5Platform) window.Ch5Platform.mount();
   } else {
+    if(window.Ch5Platform) window.Ch5Platform.unmount();
     if(brand) brand.innerHTML = 'Semiconductor Physics <span class="logo-sub">Simulator</span>';
     document.title = 'Semiconductor Physics Interactive Simulator';
     if(window.Ch2Platform) window.Ch2Platform.unmount();
@@ -2858,5 +2874,6 @@ requestAnimationFrame(()=>{
 </script>
 <script defer src="src/ch2/ch2-core.js"></script>
 <script defer src="src/ch3/ch3-core.js"></script>
+<script defer src="src/ch5/ch5-core.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-# Engineering Physics Interactive Simulator (Chapters 1, 2 & 3)
+# Engineering Physics Interactive Simulator (Chapters 1, 2, 3 & Unit V)
 
 A dependency-free HTML/CSS/JS application that teaches **Chapter 1: Semiconductor Physics**, **Chapter 2: LASER & Optical Fibre**, and **Chapter 3: Quantum Mechanics** through twenty interactive physics simulations.
 
@@ -38,6 +38,10 @@ A dependency-free HTML/CSS/JS application that teaches **Chapter 1: Semiconducto
 | 3.4 | Wave Function & Schrödinger Equation | `sim4-wavefunction-schrodinger.js` | **A. Normalization & `\|ψ\|²`:** integral `∫\|ψ\|²dx`, normalization factor `N`, one-click normalize, interval probability `P(x₁ ≤ x ≤ x₂)`. **B. Well-Behaved `ψ(x)`:** single-valued, finite, continuous, normalizable, plus finite vs. infinite wall slope behavior. **C. 1D TISE Explorer:** `−(ħ²/2m)d²ψ/dx² + V(x)ψ = Eψ` RK4 curvature solver bridging directly to Box & Tunnelling |
 | 3.5 | Particle in a Box Laboratory | `sim5-particle-box.js` | **A. Rigid 1D Box:** `ψ_n(x) = √(2/L) sin(nπx/L)`, `E_n = n²h²/(8mL²)`, adjustable `L`, `m`, `n`, second-level comparison `n₂`, stationary `\|Ψ_n\|²` vs. phase `e^{−iE_n t/ħ}`, energy-level ladder, and 4-step boundary-condition derivation. **B. Qualitative Finite Potential Well:** symmetric 1D bound-state barrier penetration & evanescent decay |
 | 3.6 | Quantum Tunnelling Laboratory | `sim6-tunnelling.js` | 1D rectangular barrier (`E < V₀` tunnelling & `E > V₀` over-barrier interference), overflow-safe exact analytical `T(E)` & `R = 1 − T`, exact steady-state complex scattering wavefunction `ψ(x,t)` matched at `x = 0, a`, and live `T(E)` curve |
+
+## Unit V: Magnetism and Superconductivity (`src/ch5/`)
+
+Nine lazy-loaded labs cover magnetic material classes and ordering temperatures; hysteresis; GMR; adiabatic demagnetization; superconductivity, Meissner effect and critical fields; conventional BCS pairing; Josephson effects; DC-SQUID interference; and superconducting magnets and maglev. Use the Unit V tab, then the topic pills or syllabus index to launch each experiment. Controls and parameters are illustrative, not measured material data. The magnetocaloric effect is included as a short explanatory statement.
 
 ## Physics fidelity & explicit modeling notes
 
