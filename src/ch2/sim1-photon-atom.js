@@ -4,6 +4,13 @@
   const C = window.Ch2Platform;
   const X = window.XLab;
 
+  // Photon coordinate space: normalized (0..1, 0..1) mapped into the right chamber card.
+  // cx/cy of the atom sit exactly at the center of this space.
+  const CHAMBER = { x0: 369.5, y0: 75, w: 395, h: 320, cx: 567, cy: 235 };
+  const CLIP = { x: 342, y: 26, w: 450, h: 408 }; // chamber interior clip (card inset 2px)
+  const PHOTON_SPEED_PX = 150;                    // px/s along a photon's own axis
+  const PHOTON_HALF_EXTENT = 46;                  // wave half-length + arrowhead, px
+
   window.CH2_SIMS['c2t1'] = function createPhotonAtomLab(ctxDom) {
     const { stage, controls, formula, wrap, dot } = ctxDom;
     const svgEl = C.svgEl;
@@ -22,12 +29,36 @@
       targetLevel: 1,
       inPhotonX: -0.1,       // normalized -0.1..1.1 across chamber
       inPhotonAlive: false,
-      outPhotons: [],        // { x, y, vx, vy, angleRad, wavelength, phaseOffset, label }
+      outPhotons: [],        // { x, y, vx, vy, dirRad, wavelength, phaseOffset, label }
       spontAngleDeg: 38,
+      spontDwell: 1.35,      // randomized excited-state lifetime (s) before decay fires
       flashAlpha: 0,
       waveClock: 0,
       lastMessage: '',
     };
+
+    // Convert a physics angle (deg, standard math convention: CCW from +x, y-up)
+    // into pixel-true normalized velocity inside the chamber, so the on-screen
+    // trajectory exactly matches the drawn wave orientation and the displayed θ.
+    function spontVelocity(angleDeg) {
+      const rad = angleDeg * P.degToRad;
+      return {
+        dirRad: rad,
+        vx: Math.cos(rad) * PHOTON_SPEED_PX / CHAMBER.w,   // normalized-x per second
+        vy: -Math.sin(rad) * PHOTON_SPEED_PX / CHAMBER.h,  // SVG y-down flip
+      };
+    }
+
+    // Resample an emission direction that is visually unmistakable (away from the
+    // horizontal axis and away from the header/pill strip near vertical).
+    function randomSpontAngle() {
+      let deg = Math.round(Math.random() * 320 + 20) % 360;
+      const nearMod = (m) => Math.min(Math.abs(deg - m), 360 - Math.abs(deg - m));
+      while (nearMod(0) < 18 || nearMod(180) < 18 || nearMod(90) < 18 || nearMod(270) < 18) {
+        deg = (deg + 41) % 360;
+      }
+      return deg;
+    }
 
     const RESONANCE_TOL_EV = 0.05;
     let built = false;
@@ -60,11 +91,9 @@
         state.electronLevel = 2;
         state.targetLevel = 2;
         state.inPhotonAlive = false;
-        state.spontAngleDeg = Math.round(Math.random() * 320 + 20) % 360;
-        // avoid flat 0 deg so randomness is visually unmistakable
-        if (Math.abs(state.spontAngleDeg) < 15 || Math.abs(state.spontAngleDeg - 180) < 15) {
-          state.spontAngleDeg = (state.spontAngleDeg + 47) % 360;
-        }
+        state.spontAngleDeg = randomSpontAngle();
+        // Excited-state lifetime is statistical: randomize the decay delay each cycle
+        state.spontDwell = 0.9 + Math.random() * 1.2; // 0.9–2.1 s
       } else {
         state.electronLevel = 2;
         state.targetLevel = 2;
@@ -117,14 +146,14 @@
         state.targetLevel = 2;
       } else if (state.mode === 'spontaneous') {
         state.targetLevel = 1;
-        const rad = state.spontAngleDeg * P.degToRad;
+        const v = spontVelocity(state.spontAngleDeg);
         const lam0 = C.evToNm(state.deltaE);
         state.outPhotons = [{
           x: 0.50,
           y: 0.50,
-          vx: Math.cos(rad) * 0.38,
-          vy: Math.sin(rad) * 0.38,
-          angleRad: rad,
+          vx: v.vx,
+          vy: v.vy,
+          dirRad: v.dirRad,      // physics angle (CCW from +x, y-up) — matches displayed θ
           wavelength: lam0,
           phaseOffset: Math.random() * Math.PI * 2,
           tag: 'Spontaneous hν',
@@ -136,11 +165,11 @@
         const sharedPhase = state.waveClock;
         state.outPhotons = [
           {
-            x: 0.52, y: 0.45, vx: 0.38, vy: 0, angleRad: 0,
+            x: 0.52, y: 0.45, vx: PHOTON_SPEED_PX / CHAMBER.w, vy: 0, dirRad: 0,
             wavelength: lam0, phaseOffset: sharedPhase, tag: 'Incident hν',
           },
           {
-            x: 0.52, y: 0.55, vx: 0.38, vy: 0, angleRad: 0,
+            x: 0.52, y: 0.55, vx: PHOTON_SPEED_PX / CHAMBER.w, vy: 0, dirRad: 0,
             wavelength: lam0, phaseOffset: sharedPhase, tag: 'Stimulated hν (in phase)',
           },
         ];
@@ -157,9 +186,22 @@
           p.y += p.vy * 0.65;
         });
       }
-      if (!state.inPhotonAlive && state.mode !== 'absorption' && state.outPhotons.length === 0) {
-        state.inPhotonX = 0.85;
-      }
+    }
+
+    // Advance emitted photons and retire them once they have fully left the
+    // (clipped) chamber — so nothing freezes mid-air or pops at loop reset.
+    function moveOutPhotons(dt) {
+      state.outPhotons.forEach((p) => {
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+      });
+      const margin = PHOTON_HALF_EXTENT + 4; // px beyond clip edge before removal
+      state.outPhotons = state.outPhotons.filter((p) => {
+        const px = CHAMBER.x0 + p.x * CHAMBER.w;
+        const py = CHAMBER.y0 + p.y * CHAMBER.h;
+        return px > CLIP.x - margin && px < CLIP.x + CLIP.w + margin
+          && py > CLIP.y - margin && py < CLIP.y + CLIP.h + margin;
+      });
     }
 
     function handleAtomArrival() {
@@ -214,6 +256,10 @@
       merge.append(svgEl('feMergeNode', { in: 'blur' }), svgEl('feMergeNode', { in: 'SourceGraphic' }));
       glow.append(merge);
       defs.append(glow);
+      // Photons must never leave the interaction chamber card
+      const clip = svgEl('clipPath', { id: 'c2t1-chamber-clip' });
+      clip.append(svgEl('rect', { x: CLIP.x, y: CLIP.y, width: CLIP.w, height: CLIP.h, rx: 7 }));
+      defs.append(clip);
       svg.append(defs);
 
       // Background subtle grid
@@ -262,7 +308,6 @@
       const chHeader = svgEl('text', { x: 358, y: 50, fill: '#edf1f8', 'font-size': '13', 'font-weight': '600', 'font-family': 'Inter, sans-serif' });
       chHeader.textContent = 'OPTICAL INTERACTION CHAMBER';
       const stepLabel = svgEl('text', { x: 776, y: 50, 'text-anchor': 'end', fill: '#22d3ee', 'font-size': '11.5', 'font-weight': '600', 'font-family': 'JetBrains Mono, monospace' });
-      svg.append(chHeader, stepLabel);
 
       // Optical axis line
       svg.append(svgEl('line', { x1: 356, y1: 235, x2: 778, y2: 235, stroke: 'rgba(255,255,255,0.1)', 'stroke-dasharray': '5 5' }));
@@ -276,19 +321,29 @@
       const atomStateTxt = svgEl('text', { x: 567, y: 300, 'text-anchor': 'middle', fill: '#8f9cb5', 'font-size': '11.5', 'font-weight': '600', 'font-family': 'JetBrains Mono, monospace' });
       svg.append(atomOuter, atomInner, atomFlash, nucleus, orbitElectron, atomStateTxt);
 
-      // Resonance match badge in chamber
-      const matchPillRect = svgEl('rect', { x: 358, y: 66, width: 190, height: 24, rx: 4, fill: 'rgba(52,211,153,0.12)', stroke: 'rgba(52,211,153,0.35)' });
-      const matchPillText = svgEl('text', { x: 453, y: 82, 'text-anchor': 'middle', fill: '#34d399', 'font-size': '11', 'font-weight': '600', 'font-family': 'JetBrains Mono, monospace' });
-      svg.append(matchPillRect, matchPillText);
+      // Spontaneous-emission direction annotation: horizontal reference + emission ray + θ arc
+      const spontRefLine = svgEl('line', { x1: CHAMBER.cx + 10, y1: CHAMBER.cy, x2: CHAMBER.cx + 52, y2: CHAMBER.cy, stroke: 'rgba(237,241,248,0.35)', 'stroke-dasharray': '3 3', 'stroke-width': '1.2', opacity: '0' });
+      const spontRay = svgEl('line', { x1: CHAMBER.cx, y1: CHAMBER.cy, x2: CHAMBER.cx, y2: CHAMBER.cy, 'stroke-width': '1.6', 'stroke-dasharray': '5 3', opacity: '0' });
+      const spontArc = svgEl('path', { d: '', fill: 'none', 'stroke-width': '1.4', opacity: '0' });
+      const spontThetaTxt = svgEl('text', { 'text-anchor': 'middle', 'font-size': '10.5', 'font-weight': '600', 'font-family': 'JetBrains Mono, monospace', opacity: '0' });
+      svg.append(spontRefLine, spontRay, spontArc, spontThetaTxt);
+
+      // Dynamic photon wave container — clipped so photons stay inside the chamber
+      const photonLayer = svgEl('g', { 'clip-path': 'url(#c2t1-chamber-clip)' });
+      svg.append(photonLayer);
 
       // Phase-lock alignment guide for stimulated emission
       const phaseGuide1 = svgEl('line', { x1: 0, y1: 0, x2: 0, y2: 0, stroke: 'rgba(52,211,153,0.45)', 'stroke-dasharray': '3 3', opacity: '0' });
       const phaseGuide2 = svgEl('line', { x1: 0, y1: 0, x2: 0, y2: 0, stroke: 'rgba(52,211,153,0.45)', 'stroke-dasharray': '3 3', opacity: '0' });
       svg.append(phaseGuide1, phaseGuide2);
 
-      // Dynamic photon wave container
-      const photonLayer = svgEl('g');
-      svg.append(photonLayer);
+      // Resonance match badge in chamber (paints above photons)
+      const matchPillRect = svgEl('rect', { x: 358, y: 66, width: 190, height: 24, rx: 4, fill: 'rgba(52,211,153,0.12)', stroke: 'rgba(52,211,153,0.35)' });
+      const matchPillText = svgEl('text', { x: 453, y: 82, 'text-anchor': 'middle', fill: '#34d399', 'font-size': '11', 'font-weight': '600', 'font-family': 'JetBrains Mono, monospace' });
+      svg.append(matchPillRect, matchPillText);
+
+      // Chamber headers paint last so passing photons slide underneath them
+      svg.append(chHeader, stepLabel);
 
       // Chamber equation badge bottom
       const eqBadge = svgEl('text', { x: 567, y: 416, 'text-anchor': 'middle', fill: 'rgba(237,241,248,0.82)', 'font-size': '12', 'font-family': 'JetBrains Mono, monospace' });
@@ -313,6 +368,7 @@
           state.mode = m;
           ui.lamSlider.input.disabled = (m === 'spontaneous');
           ui.matchBtn.disabled = (m === 'spontaneous');
+          if (ui.triggerBtn) ui.triggerBtn.textContent = m === 'spontaneous' ? 'Trigger Next Decay' : 'Introduce Photon / Trigger';
           resetSimulation(true);
         },
       });
@@ -343,6 +399,7 @@
         }},
       ]);
       ui.matchBtn = actionRefs.match;
+      ui.triggerBtn = actionRefs.trigger;
 
       ui.stepToggle = X.buildToggle(controls, {
         label: 'Step-by-step mode',
@@ -397,6 +454,7 @@
         svg, e2Line, e1Line, e2Label, e1Label, e2Sub, e1Sub, deLine, deText,
         transArrow, transHead, electronHalo, electronCore, electronTag,
         atomOuter, atomInner, atomFlash, orbitElectron, atomStateTxt,
+        spontRefLine, spontRay, spontArc, spontThetaTxt,
         matchPillRect, matchPillText, phaseGuide1, phaseGuide2,
         photonLayer, eqBadge, stepLabel,
       };
@@ -414,7 +472,7 @@
       ui.readouts.set('freq', nuTHz.toFixed(1) + ' THz');
 
       if (state.mode === 'spontaneous') {
-        ui.readouts.set('status', `Spontaneous decay · θ = ${state.spontAngleDeg}° (random)`);
+        ui.readouts.set('status', `Spontaneous decay · θ = ${state.spontAngleDeg}° (random, CCW from horizontal) · τ random`);
       } else if (matched) {
         ui.readouts.set('status', `Resonant match ✓ (|ΔE − hν| ≤ 0.05 eV)`);
       } else {
@@ -446,11 +504,11 @@
         }
       } else if (state.mode === 'spontaneous') {
         if (state.phase === 'ready' || state.phase === 'wait') {
-          banner.set('MODE B · SPONTANEOUS', '', 'Atom starts in excited state <b>E₂</b> with <b>no incident photon</b>. Waiting for independent spontaneous decay...');
+          banner.set('MODE B · SPONTANEOUS', '', 'Atom sits in excited state <b>E₂</b> with <b>no incident photon</b>. Spontaneous decay is statistical — it fires after an <b>unpredictable delay</b>, in a random direction.');
         } else if (state.phase === 'transition') {
-          banner.set('DECAYING E₂ → E₁', 'ok', `Electron drops spontaneously without external stimulus, emitting a photon at random angle <b>θ = ${state.spontAngleDeg}°</b>.`);
+          banner.set('DECAYING E₂ → E₁', 'ok', `No external stimulus. Electron drops on its own, emitting one photon of energy <b>hν = ΔE</b> at random angle <b>θ = ${state.spontAngleDeg}°</b> with random phase.`);
         } else {
-          banner.set('SPONTANEOUS EMISSION', 'ok', `Emitted photon has energy <b>hν = ${state.deltaE.toFixed(2)} eV</b>, but <b>random direction (${state.spontAngleDeg}°) &amp; random phase</b>.`);
+          banner.set('SPONTANEOUS EMISSION', 'ok', `Emitted photon: <b>hν = ${state.deltaE.toFixed(2)} eV</b>, but <b>random direction (θ = ${state.spontAngleDeg}°, counter-clockwise from horizontal) &amp; random phase</b> — incoherent light. Each cycle re-randomizes θ.`);
         }
       } else {
         if (state.phase === 'ready') {
@@ -484,23 +542,26 @@
       return d;
     }
 
-    function drawPhoton(parent, cx, cy, angleRad, wavelengthNm, phaseOff, label) {
+    function drawPhoton(parent, cx, cy, svgAngleRad, wavelengthNm, phaseOff, label, labelBelow) {
       const col = C.spectrumColor(wavelengthNm, 1);
-      const pathD = createWavePacketPath(cx, cy, angleRad, wavelengthNm, phaseOff, 68, 9);
+      const pathD = createWavePacketPath(cx, cy, svgAngleRad, wavelengthNm, phaseOff, 68, 9);
       const g = svgEl('g');
       g.append(svgEl('path', { d: pathD, fill: 'none', stroke: col, 'stroke-width': '2.6', 'stroke-linecap': 'round', filter: 'url(#c2t1-glow)' }));
-      const headX = cx + Math.cos(angleRad) * 38;
-      const headY = cy + Math.sin(angleRad) * 38;
-      const tailX = headX - Math.cos(angleRad) * 10;
-      const tailY = headY - Math.sin(angleRad) * 10;
-      const nx = -Math.sin(angleRad) * 4.5, ny = Math.cos(angleRad) * 4.5;
+      const headX = cx + Math.cos(svgAngleRad) * 38;
+      const headY = cy + Math.sin(svgAngleRad) * 38;
+      const tailX = headX - Math.cos(svgAngleRad) * 10;
+      const tailY = headY - Math.sin(svgAngleRad) * 10;
+      const nx = -Math.sin(svgAngleRad) * 4.5, ny = Math.cos(svgAngleRad) * 4.5;
       g.append(svgEl('polygon', {
         points: `${headX.toFixed(1)},${headY.toFixed(1)} ${(tailX + nx).toFixed(1)},${(tailY + ny).toFixed(1)} ${(tailX - nx).toFixed(1)},${(tailY - ny).toFixed(1)}`,
         fill: col,
       }));
       if (label) {
+        // Keep the label on the side away from the direction of travel so it never
+        // leads the wave packet out of the clipped chamber area.
+        const ly = labelBelow ? cy + 26 : cy - 16;
         const txt = svgEl('text', {
-          x: cx, y: cy - 16,
+          x: cx, y: ly,
           'text-anchor': 'middle',
           fill: col,
           'font-size': '10.5',
@@ -616,23 +677,53 @@
       };
       r.stepLabel.textContent = stepMap[state.phase] || '';
 
-      // Photons in chamber (x normalized 0..1 maps to 370..765, y 0..1 maps to 75..395)
+      // Photons in chamber (normalized 0..1 maps to the shared CHAMBER pixel space)
       r.photonLayer.innerHTML = '';
-      const mapX = (nx) => 370 + nx * 395;
-      const mapY = (ny) => 75 + ny * 320;
+      const mapX = (nx) => CHAMBER.x0 + nx * CHAMBER.w;
+      const mapY = (ny) => CHAMBER.y0 + ny * CHAMBER.h;
 
       if (state.inPhotonAlive) {
         const px = mapX(state.inPhotonX);
         const py = mapY(0.5);
         const ePh = C.nmToEv(state.lambda);
-        drawPhoton(r.photonLayer, px, py, 0, state.lambda, state.waveClock * 4, `hν = ${ePh.toFixed(2)} eV`);
+        drawPhoton(r.photonLayer, px, py, 0, state.lambda, state.waveClock * 4, `hν = ${ePh.toFixed(2)} eV`, false);
       }
 
       state.outPhotons.forEach((p) => {
         const px = mapX(p.x);
         const py = mapY(p.y);
-        drawPhoton(r.photonLayer, px, py, p.angleRad, p.wavelength, state.waveClock * 4 + p.phaseOffset, p.tag);
+        // dirRad uses the y-up math convention; SVG is y-down, so draw at -dirRad.
+        // The velocity was built with the same flip, so path and orientation agree.
+        drawPhoton(r.photonLayer, px, py, -p.dirRad, p.wavelength, state.waveClock * 4 + p.phaseOffset, p.tag, p.vy < 0);
       });
+
+      // Spontaneous-emission direction annotation (θ ray + arc) during decay & result
+      if (state.mode === 'spontaneous' && (state.phase === 'transition' || state.phase === 'complete')) {
+        const rad = state.spontAngleDeg * P.degToRad;
+        const col = C.spectrumColor(C.evToNm(state.deltaE), 0.95);
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        r.spontRefLine.setAttribute('opacity', '0.8');
+        r.spontRay.setAttribute('opacity', '0.9');
+        r.spontRay.setAttribute('stroke', col);
+        r.spontRay.setAttribute('x2', (CHAMBER.cx + cos * 74).toFixed(1));
+        r.spontRay.setAttribute('y2', (CHAMBER.cy - sin * 74).toFixed(1));
+        const arcR = 32;
+        const largeArc = state.spontAngleDeg > 180 ? 1 : 0;
+        r.spontArc.setAttribute('opacity', '0.9');
+        r.spontArc.setAttribute('stroke', col);
+        r.spontArc.setAttribute('d', `M ${(CHAMBER.cx + arcR).toFixed(1)} ${CHAMBER.cy} A ${arcR} ${arcR} 0 ${largeArc} 0 ${(CHAMBER.cx + arcR * cos).toFixed(1)} ${(CHAMBER.cy - arcR * sin).toFixed(1)}`);
+        const midRad = rad / 2;
+        r.spontThetaTxt.setAttribute('opacity', '0.95');
+        r.spontThetaTxt.setAttribute('fill', col);
+        r.spontThetaTxt.setAttribute('x', (CHAMBER.cx + 46 * Math.cos(midRad)).toFixed(1));
+        r.spontThetaTxt.setAttribute('y', (CHAMBER.cy - 46 * Math.sin(midRad) + 3.5).toFixed(1));
+        r.spontThetaTxt.textContent = `θ = ${state.spontAngleDeg}°`;
+      } else {
+        r.spontRefLine.setAttribute('opacity', '0');
+        r.spontRay.setAttribute('opacity', '0');
+        r.spontArc.setAttribute('opacity', '0');
+        r.spontThetaTxt.setAttribute('opacity', '0');
+      }
 
       // Phase-lock alignment guides when two stimulated photons travel together
       if (state.mode === 'stimulated' && state.outPhotons.length === 2) {
@@ -672,6 +763,7 @@
             state.phase = state.mode === 'spontaneous' ? 'wait' : 'approach';
             state.tPhase = 0;
             updateBanner();
+            updateReadouts();
           }
         } else if (state.phase === 'approach') {
           state.inPhotonX += dt * 0.36;
@@ -681,7 +773,8 @@
             updateReadouts();
           }
         } else if (state.phase === 'wait') {
-          if (state.tPhase > 1.35) {
+          // Excited-state lifetime is statistical: decay fires after a random delay
+          if (state.tPhase > state.spontDwell) {
             startTransition();
             updateBanner();
             updateReadouts();
@@ -690,10 +783,7 @@
           const k = X.clamp(state.tPhase / 0.55, 0, 1);
           const startL = state.mode === 'absorption' ? 1 : 2;
           state.electronLevel = X.lerp(startL, state.targetLevel, k);
-          state.outPhotons.forEach((p) => {
-            p.x += p.vx * dt;
-            p.y += p.vy * dt;
-          });
+          moveOutPhotons(dt);
           if (k >= 1) {
             state.phase = 'complete';
             state.tPhase = 0;
@@ -702,14 +792,12 @@
           }
         } else if (state.phase === 'complete') {
           if (state.inPhotonAlive) state.inPhotonX += dt * 0.36;
-          state.outPhotons.forEach((p) => {
-            p.x += p.vx * dt;
-            p.y += p.vy * dt;
-          });
+          moveOutPhotons(dt);
           if (state.tPhase > 2.3) {
             resetSimulation(true);
             state.phase = state.mode === 'spontaneous' ? 'wait' : 'approach';
             updateBanner();
+            updateReadouts();
           }
         }
       } else if (state.phase === 'transition') {
@@ -733,12 +821,15 @@
       resize() {
         render();
       },
+      // Shared geometry (also used by tests/ch2-photon-atom.cjs)
+      geometry: { CHAMBER, CLIP, PHOTON_SPEED_PX, PHOTON_HALF_EXTENT },
       applyPreset(preset) {
         if (preset === 'absorption' || preset === 'spontaneous' || preset === 'stimulated') {
           state.mode = preset;
           if (ui.modeSeg) ui.modeSeg.set(preset);
           if (ui.lamSlider) ui.lamSlider.input.disabled = (preset === 'spontaneous');
           if (ui.matchBtn) ui.matchBtn.disabled = (preset === 'spontaneous');
+          if (ui.triggerBtn) ui.triggerBtn.textContent = preset === 'spontaneous' ? 'Trigger Next Decay' : 'Introduce Photon / Trigger';
           if (preset !== 'spontaneous') {
             const lam0 = Math.round(X.clamp(C.evToNm(state.deltaE), 380, 1050));
             state.lambda = lam0;
