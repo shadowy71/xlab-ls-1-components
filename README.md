@@ -66,3 +66,9 @@ Nine lazy-loaded labs cover magnetic material classes and ordering temperatures;
 * Only the active chapter and active simulation update/render in the single `requestAnimationFrame` loop; switching chapters or topics cleanly unmounts the inactive simulation and clears module state.
 * Visualisations combine DPR-scaled HTML5 Canvas 2D (continuous animated waveforms, de Broglie wavefronts, wave packets, scattering barriers) and responsive SVG diagrams (uncertainty distributions, normalization & Schrödinger curvature, energy-level ladders, particle-in-a-box views).
 * Accessibility: native labelled controls, WAI-ARIA `tablist`/`tab` keyboard navigation (`ArrowLeft`/`ArrowRight`/`Home`/`End`), visible focus indicators, and `prefers-reduced-motion` support.
+
+## Unit VI: Introduction to Nanoscience (`src/ch6/`)
+
+Select **Unit VI** in the existing chapter navigation. Eight lazy-loaded laboratories cover scale and surface area, confinement, four material-property models, ball milling, PVD, colloidal gold, nanosensors, and optoelectronics and applications. Lesson model notes are available below each lab. The controls and synthetic curves are teaching models, not experimental measurements or process recipes. `models.js` separates calculations from the SVG interface; test the geometry, quantum and process calculations with `node tests/ch6-models.cjs`.
+
+The ball-milling lesson also contains the preparation-method comparison and links to PVD and colloidal synthesis. Milling histograms bin 80 representative model particles, not experimental data; the collisions are schematic and changes to parameters recompute the illustrative trajectory. In PVD, the selected substrate rate is prescribed independently of the qualitative source/transport controls. Gold stages, sensor calibration and device threshold are conceptual models, not process recipes or device specifications. The repository is a static site and does not define separate build or lint commands.
