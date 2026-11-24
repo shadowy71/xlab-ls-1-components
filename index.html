@@ -488,13 +488,9 @@ select:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border
       </span>
       <span id="brandTitle">Semiconductor Physics <span class="logo-sub">Simulator</span></span>
     </div>
-    <div class="chapter-tabs">
-      <button class="chapter-tab active" data-chapter="1">Chapter 1<span class="ch-sub">: Semiconductor Physics</span></button>
-      <button class="chapter-tab" data-chapter="2">Chapter 2<span class="ch-sub">: LASER &amp; Optical Fibre</span></button>
-      <button class="chapter-tab" data-chapter="3">Chapter 3<span class="ch-sub">: Quantum Mechanics</span></button>
-      <button class="chapter-tab" data-chapter="5">Chapter 5<span class="ch-sub">: Magnetism &amp; Superconductivity</span></button>
-      <button class="chapter-tab" data-chapter="6">Chapter 6<span class="ch-sub">: Nanoscience</span></button>
-    </div>
+    <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Open course navigation" aria-expanded="false" aria-controls="courseSidebar">
+      <svg width="17" height="17" viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4.5h12M2.5 8.5h12M2.5 12.5h12"/></svg>
+    </button>
     <div class="nav-actions">
       <button class="icon-btn" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -510,12 +506,26 @@ select:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border
   </div>
 </nav>
 
-<!-- ============ TOPIC NAVIGATION BAR ============ -->
-<div class="pill-bar">
-  <div class="pill-bar-inner" id="pillBar" role="tablist" aria-label="Chapter 1 topics"></div>
+<!-- ============ COURSE NAVIGATION + LEARNING WORKSPACE ============ -->
+<div class="app-layout">
+  <div class="sidebar-scrim" id="sidebarScrim" aria-hidden="true"></div>
+  <aside class="course-sidebar" id="courseSidebar" aria-label="Course navigation">
+    <div class="sidebar-scroll">
+      <div class="sidebar-section-label">COURSE LIBRARY</div>
+      <div class="chapter-tabs" role="group" aria-label="Chapters">
+        <button class="chapter-tab active" data-chapter="1"><span class="chapter-number">01</span><span class="chapter-copy"><strong>Semiconductor physics</strong><small>Chapter 1</small></span></button>
+        <button class="chapter-tab" data-chapter="2"><span class="chapter-number">02</span><span class="chapter-copy"><strong>LASER &amp; optical fibre</strong><small>Chapter 2</small></span></button>
+        <button class="chapter-tab" data-chapter="3"><span class="chapter-number">03</span><span class="chapter-copy"><strong>Quantum mechanics</strong><small>Chapter 3</small></span></button>
+        <button class="chapter-tab" data-chapter="5"><span class="chapter-number">05</span><span class="chapter-copy"><strong>Magnetism &amp; superconductivity</strong><small>Chapter 5</small></span></button>
+        <button class="chapter-tab" data-chapter="6"><span class="chapter-number">06</span><span class="chapter-copy"><strong>Nanoscience</strong><small>Chapter 6</small></span></button>
+      </div>
+      <div class="sidebar-topic-heading"><span>IN THIS CHAPTER</span><span class="topic-count" id="topicCount"></span></div>
+      <div class="pill-bar"><div class="pill-bar-inner" id="pillBar" role="tablist" aria-label="Chapter 1 topics"></div></div>
+    </div>
+    <div class="sidebar-foot"><span class="status-mark"></span><span>Interactive science lab</span></div>
+  </aside>
+  <main id="main"></main>
 </div>
-
-<main id="main"></main>
 
 <script>
 'use strict';
@@ -2848,6 +2858,25 @@ function switchChapter(ch){
 document.querySelectorAll('.chapter-tab[data-chapter]').forEach(btn=>{
   btn.addEventListener('click', ()=>switchChapter(btn.dataset.chapter));
 });
+
+/* Compact responsive course drawer. Navigation destinations and simulation state
+   continue to be handled by the existing chapter/topic routers. */
+const menuBtn = document.getElementById('menuBtn');
+const sidebarScrim = document.getElementById('sidebarScrim');
+function setSidebarOpen(open){
+  document.body.classList.toggle('sidebar-open', open);
+  menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  menuBtn.setAttribute('aria-label', open ? 'Close course navigation' : 'Open course navigation');
+}
+menuBtn.addEventListener('click', ()=>setSidebarOpen(!document.body.classList.contains('sidebar-open')));
+sidebarScrim.addEventListener('click', ()=>setSidebarOpen(false));
+document.querySelectorAll('.chapter-tab').forEach(btn=>btn.addEventListener('click', ()=>setSidebarOpen(false)));
+pillBar.addEventListener('click', e=>{ if(e.target.closest('.pill')) setSidebarOpen(false); });
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape') setSidebarOpen(false); });
+const topicCount = document.getElementById('topicCount');
+const updateTopicCount = ()=>{ if(topicCount) topicCount.textContent = String(pillBar.querySelectorAll('.pill').length).padStart(2,'0'); };
+new MutationObserver(updateTopicCount).observe(pillBar, { childList:true });
+updateTopicCount();
 
 /* ============================================================
    NAV / THEME / FULLSCREEN
