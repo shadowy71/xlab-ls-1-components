@@ -516,6 +516,7 @@ select:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border
         <button class="chapter-tab active" data-chapter="1"><span class="chapter-number">01</span><span class="chapter-copy"><strong>Semiconductor physics</strong><small>Chapter 1</small></span></button>
         <button class="chapter-tab" data-chapter="2"><span class="chapter-number">02</span><span class="chapter-copy"><strong>LASER &amp; optical fibre</strong><small>Chapter 2</small></span></button>
         <button class="chapter-tab" data-chapter="3"><span class="chapter-number">03</span><span class="chapter-copy"><strong>Quantum mechanics</strong><small>Chapter 3</small></span></button>
+        <button class="chapter-tab" data-chapter="4"><span class="chapter-number">04</span><span class="chapter-copy"><strong>Quantum computing</strong><small>Chapter 4</small></span></button>
         <button class="chapter-tab" data-chapter="5"><span class="chapter-number">05</span><span class="chapter-copy"><strong>Magnetism &amp; superconductivity</strong><small>Chapter 5</small></span></button>
         <button class="chapter-tab" data-chapter="6"><span class="chapter-number">06</span><span class="chapter-copy"><strong>Nanoscience</strong><small>Chapter 6</small></span></button>
       </div>
@@ -2808,12 +2809,13 @@ window.XLab = {
 
 function switchChapter(ch){
   const target = Number(ch);
-  if(target !== 1 && target !== 2 && target !== 3 && target !== 5 && target !== 6) return;
+  if(target !== 1 && target !== 2 && target !== 3 && target !== 4 && target !== 5 && target !== 6) return;
   activeChapter = target;
   document.querySelectorAll('.chapter-tab[data-chapter]').forEach(btn=>{
     btn.classList.toggle('active', Number(btn.dataset.chapter) === target);
   });
   if(target !== 6 && window.Ch6Platform) window.Ch6Platform.unmount();
+  if(target !== 4 && window.Ch4Platform) window.Ch4Platform.unmount();
   const brand = document.getElementById('brandTitle');
   if(target === 2){
     if(brand) brand.innerHTML = 'LASER &amp; Optical Fibre <span class="logo-sub">Simulator</span>';
@@ -2829,6 +2831,14 @@ function switchChapter(ch){
     if(window.Ch2Platform) window.Ch2Platform.unmount();
     if(window.Ch5Platform) window.Ch5Platform.unmount();
     if(window.Ch3Platform) window.Ch3Platform.mount();
+  } else if(target === 4){
+    if(brand) brand.innerHTML = 'Quantum Computing <span class="logo-sub">Laboratories</span>';
+    document.title = 'Chapter 4 · Quantum Computing Laboratories';
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    if(window.Ch2Platform) window.Ch2Platform.unmount();
+    if(window.Ch3Platform) window.Ch3Platform.unmount();
+    if(window.Ch5Platform) window.Ch5Platform.unmount();
+    if(window.Ch4Platform) window.Ch4Platform.mount();
   } else if(target === 5){
     if(brand) brand.innerHTML = 'Magnetism &amp; Superconductivity <span class="logo-sub">Simulator</span>';
     document.title = 'Magnetism & Superconductivity — Interactive Simulator';
@@ -2919,6 +2929,8 @@ requestAnimationFrame(()=>{
 </script>
 <script defer src="src/ch2/ch2-core.js"></script>
 <script defer src="src/ch3/ch3-core.js"></script>
+<link rel="stylesheet" href="src/ch4/ch4.css">
+<script defer src="src/ch4/ch4-core.js"></script>
 <script defer src="src/ch5/ch5-core.js"></script>
 <script defer src="src/ch6/ch6-core.js"></script>
 </body>
