@@ -1,22 +1,71 @@
-.nano-stage{padding:18px;min-height:390px;color:var(--text);}
-.nano-stage svg{width:100%;height:auto;display:block;max-height:440px;background:var(--recessed);border:1px solid var(--border);border-radius:10px}
-.nano-stage svg text{fill:var(--text2);font-family:inherit;font-size:12px}
-.nano-controls{display:flex;flex-direction:column;gap:14px;padding:16px}
-.nano-control{display:flex;flex-direction:column;gap:5px;font-size:.8rem;color:var(--text2)}
-.nano-control label{display:flex;justify-content:space-between;gap:8px}.nano-control output{color:var(--accent);font-weight:600}
-.nano-control input{width:100%;accent-color:var(--accent)}.nano-control select,.nano-actions button{font:inherit;color:var(--text);background:var(--recessed);border:1px solid var(--border-strong);border-radius:6px;padding:7px}
-.nano-actions{display:flex;flex-wrap:wrap;gap:8px}.nano-actions button{cursor:pointer}.nano-actions button:focus-visible,.nano-control select:focus-visible{outline:2px solid var(--accent)}
-.nano-readouts{display:flex;flex-wrap:wrap;gap:8px}.nano-readouts span{padding:6px 10px;background:var(--recessed);border-radius:6px;font-size:.8rem}
-.nano-theory{margin-top:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface);padding:16px;color:var(--text2);line-height:1.6}.nano-theory summary{cursor:pointer;color:var(--text);font-weight:600}.nano-notes p{margin:10px 0}
-.nano-caption{font-size:.78rem;color:var(--text2);margin:10px 0 0;line-height:1.5}.nano-stage h4{margin:12px 0 5px}
-@media(max-width:640px){.nano-stage{padding:10px;min-height:0}.nano-stage svg{max-height:none}.nano-controls{padding:12px}}
-.nano-preparation{margin-top:18px;padding:18px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text2);line-height:1.5}.nano-preparation h3,.nano-preparation h4{color:var(--text);margin:0 0 8px}.nano-preparation label{display:block}.nano-preparation input{width:min(100%,400px);accent-color:var(--accent)}.nano-prep-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}.nano-prep-grid>div{padding:14px;border:1px solid var(--border);border-radius:8px}.nano-prep-grid svg{display:block;width:100%;height:auto;background:var(--recessed);border-radius:8px}.nano-prep-grid svg text{fill:var(--text2);font:12px sans-serif}.nano-prep-grid button{font:inherit;cursor:pointer;padding:7px;border-radius:6px;background:var(--recessed);color:var(--text);border:1px solid var(--border-strong)}.nano-prep-grid button:focus-visible{outline:2px solid var(--accent)}@media(max-width:640px){.nano-prep-grid{grid-template-columns:1fr}}
-.nano-control[hidden],.nano-actions button[hidden]{display:none}
-/* The fifth chapter tab must remain reachable on narrow headers. */
-.chapter-tabs{min-width:0;overflow-x:auto;scrollbar-width:thin;flex:0 1 auto}.chapter-tab{flex:0 0 auto}.nav-actions{flex:0 0 auto}
-@media(max-width:1100px){.ch-sub{display:none}}
-@media(max-width:640px){.logo{display:none}.nav-inner{gap:6px}.chapter-tabs{flex:1 1 auto}}
-.nano-control input[type=range],.nano-preparation input[type=range]{background:var(--border-strong);height:4px;border-radius:4px}
-@media(max-width:1500px){.ch-sub{display:none}}
-@media(max-width:640px){.nano-stage svg text{font-size:16px}}
-.nano-preparation select{font:inherit;color:var(--text);background:var(--recessed);border:1px solid var(--border-strong);border-radius:6px;padding:6px;margin:4px 0 10px}.nano-preparation select:focus-visible{outline:2px solid var(--accent)}
+/* Unit VI extends the shared course workspace; no alternate application shell. */
+.ch6-panel .nano-lesson-intro {
+  margin:0 0 18px; max-width:90ch; color:var(--text2); font-size:.86rem; line-height:1.65;
+}
+.nano-lesson-intro p { margin:0 0 6px; }
+.ch6-panel :is(h2,#nano-controls-heading,#nano-model-notes) { scroll-margin-top:calc(var(--header-height, 62px) + 16px); }
+.nano-lesson-intro a { display:inline-block; margin-right:18px; color:var(--accent); text-underline-offset:3px; }
+.ch6-panel .nano-stage { padding:18px; min-height:350px; min-width:0; color:var(--text); }
+.nano-viz { width:100%; overflow-x:auto; border:1px solid var(--border-strong); border-radius:8px; background:#101923; scrollbar-width:thin; }
+.nano-viz + .nano-viz { margin-top:12px; }
+.nano-viz svg { width:100%; min-width:620px; height:auto; display:block; }
+.nano-viz svg text,.nano-prep-grid svg text { fill:#b9cbd9; font-family:var(--font-sans, sans-serif); font-size:12px; }
+.nano-viz .nano-muted { fill:#a6b9c8; }
+.nano-pan-hint { color:var(--text2); font-size:.75rem; line-height:1.5; margin:0 0 8px; }
+.ch6-panel .nano-controls { gap:16px; padding:18px; align-items:stretch; }
+.nano-control { display:flex; flex-direction:column; gap:5px; min-width:0; font-size:.8rem; color:var(--text2); }
+.nano-control[hidden],.nano-actions button[hidden] { display:none; }
+.nano-control label { display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px 8px; line-height:1.5; }
+.nano-control output { color:var(--accent); font-weight:600; font-variant-numeric:tabular-nums; }
+.ch6-panel input[type=range] { width:100%; min-height:26px; accent-color:var(--accent); }
+.ch6-panel input[type=range]::-webkit-slider-runnable-track { background:var(--track, var(--border-strong)); }
+.ch6-panel input[type=range]::-moz-range-track { background:var(--track, var(--border-strong)); }
+.nano-control select,.nano-preparation select,.nano-actions button,.nano-preparation button,.nano-retry {
+  font:inherit; color:var(--text); background:var(--recessed); border:1px solid var(--border-strong); border-radius:6px; padding:8px 10px; min-height:38px; max-width:100%;
+}
+.nano-control select { width:100%; }
+.nano-actions { display:flex; flex-wrap:wrap; gap:8px; grid-column:1/-1; }
+.nano-actions button,.nano-preparation button,.nano-retry { cursor:pointer; }
+.nano-actions button[aria-pressed=true] { color:var(--accent); border-color:var(--accent); }
+.ch6-panel :is(button,select,input,a,summary,.nano-viz):focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+.nano-readouts { display:flex; flex-wrap:wrap; gap:8px; }
+.nano-readouts span { padding:6px 10px; background:var(--recessed); border-radius:6px; font-size:.8rem; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.nano-theory,.nano-preparation,.nano-comparison {
+  margin-top:16px; border:1px solid var(--border); border-radius:8px; background:var(--surface); padding:16px; color:var(--text2); line-height:1.65;
+}
+.nano-theory summary { cursor:pointer; color:var(--text); font-weight:600; }
+.nano-notes p { margin:10px 0; }
+.nano-caption { font-size:.8rem; color:var(--text2); margin:10px 0 12px; line-height:1.6; }
+.nano-preparation h3,.nano-preparation h4,.nano-comparison h4 { color:var(--text); margin:0 0 8px; }
+.nano-preparation label { display:block; margin-top:10px; }
+.nano-preparation input { width:min(100%,400px); }
+.nano-preparation select { margin:4px 0 10px; }
+.nano-prep-grid,.nano-comparison-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:16px; }
+.nano-prep-grid > div,.nano-comparison-grid > div { padding:14px; border:1px solid var(--border); border-radius:6px; min-width:0; }
+.nano-prep-grid svg { display:block; width:100%; height:auto; background:#101923; border-radius:6px; }
+.nano-crosslink-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.nano-comparison { font-size:.82rem; }
+.nano-comparison p { margin:4px 0 10px; }
+.nano-comparison strong { color:var(--text); }
+.nano-stages { display:flex; flex-wrap:wrap; list-style:none; gap:6px; padding:0; margin:12px 0; font-size:.75rem; color:var(--text2); }
+.nano-stages li { padding:5px 8px; border:1px solid var(--border); border-radius:5px; }
+.nano-stages [aria-current=step] { color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
+@media (max-width:1250px) and (min-width:961px) {
+  /* Keep the scientific diagram legible beside the existing course sidebar. */
+  .ch6-panel .sim-grid { grid-template-columns:minmax(0,1fr); }
+  .ch6-panel .controls-pane { border-left:0; border-top:1px solid var(--border); }
+  .ch6-panel .nano-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width:700px) {
+  .ch6-panel .nano-stage { padding:10px; min-height:0; }
+  .ch6-panel .canvas-title { height:auto; min-height:46px; gap:10px; padding-top:10px; padding-bottom:10px; }
+  .ch6-panel .canvas-title > span:first-child { min-width:0; }
+  .ch6-panel .canvas-title .live-dot { flex-shrink:0; }
+  .ch6-panel .nano-controls { padding:15px; }
+  .nano-prep-grid,.nano-comparison-grid { grid-template-columns:1fr; }
+  .nano-preparation { padding:14px; }
+  .nano-preparation button { margin:3px 0; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .ch6-panel,.ch6-panel * { scroll-behavior:auto !important; }
+}
