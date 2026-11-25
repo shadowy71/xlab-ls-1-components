@@ -440,7 +440,7 @@
     // Collapsible Overview Strip for discovering all 7 Chapter 2 Virtual Labs
     const ov = el('section', 'ch2-overview');
     ov.id = 'ch2Overview';
-    ov.setAttribute('aria-label', 'Chapter 2 Virtual Laboratories Overview');
+    ov.setAttribute('aria-label', 'Unit II Virtual Laboratories Overview');
     const compactDefault = window.innerWidth <= 768;
     if (!compactDefault) ov.classList.add('open');
 
@@ -450,7 +450,7 @@
     ovHead.setAttribute('aria-expanded', compactDefault ? 'false' : 'true');
     ovHead.innerHTML = `
       <span class="ch2-overview-title">
-        <span class="ch2-badge">Chapter 2 · 7 Virtual Labs</span>
+        <span class="ch2-badge">Unit II · 7 Virtual Labs</span>
         <span>LASER &amp; Optical Fibre Laboratory Index</span>
         <span class="ch2-overview-sub">Jump directly to any lesson experiment</span>
       </span>
@@ -586,7 +586,7 @@
   function renderPillBar() {
     const pillBar = document.getElementById('pillBar');
     pillBar.innerHTML = '';
-    pillBar.setAttribute('aria-label', 'Chapter 2 topics');
+    pillBar.setAttribute('aria-label', 'Unit II topics');
     CH2_TOPICS.forEach((t) => {
       const btn = window.XLab.el(
         'button',

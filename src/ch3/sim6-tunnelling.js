@@ -36,6 +36,7 @@
     let canvasObj = null;
     let ui = {};
     let banner = null;
+    let viewer = null, viewerKey = null;
 
     function calcTransmission(E, V0, aNm, massMe) {
       const m = massMe * P.m_e;
@@ -185,6 +186,14 @@
       cv.id = 'cv-c3t6';
       cv.setAttribute('aria-label', 'Quantum Tunnelling Rectangular Potential Barrier Simulator');
       stage.append(cv);
+      if (window.XLabWorkspace) viewer = window.XLabWorkspace.attach3D(stage, {
+        script: 'src/ch3/tunnelling-3d.js',
+        openLabel: 'Open 3D density view', closeLabel: 'Close 3D density view',
+        instructions: 'Drag to orbit · scroll to zoom. This is the exact 1D density extruded sideways, not a 3D wavefunction. Barrier energy and density use separate visual scales.',
+        parts: ['Barrier', 'Probability density'],
+        snapshot: () => makeDensityPayload(),
+        mount: (host, describe, onLost) => window.XLabTunnelling3D.mount(host, describe, onLost)
+      });
       canvasObj = X.setupCanvas(cv);
 
       banner = C.buildBanner(wrap);
@@ -319,8 +328,16 @@
       }
     }
 
+    function makeDensityPayload() {
+      const coeff = buildScatteringCoefficients();
+      const samples = Array.from({length:97}, (_, i) => {const psi = evalScatteringPsi(-1.6 + 4.4*i/96, coeff); return cAbs2(psi)});
+      return {state: {...state}, samples};
+    }
+
     function render() {
       if (!canvasObj) return;
+      const key = [state.energyEv,state.v0Ev,state.widthNm,state.massMe].join(':');
+      if (viewer && key !== viewerKey) {viewerKey = key;viewer.update(makeDensityPayload())}
       const { ctx, w, h } = canvasObj;
       ctx.clearRect(0, 0, w, h);
 
@@ -549,7 +566,7 @@
         updateBanner();
         render();
       },
-      unmount() {},
+      unmount() { if (viewer) viewer.destroy(); viewer = null; },
       tick(dt) {
         if (state.playing) state.time += dt;
         render();

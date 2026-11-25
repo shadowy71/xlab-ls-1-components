@@ -494,7 +494,7 @@
     // Collapsible 15-Topic Syllabus Index linking straight to every Simulation & Sub-lab
     const ov = el('section', 'ch5-overview');
     ov.id = 'ch5Overview';
-    ov.setAttribute('aria-label', 'Chapter 5 Magnetism and Superconductivity Syllabus Index');
+    ov.setAttribute('aria-label', 'Unit V Magnetism and Superconductivity Syllabus Index');
     const compactDefault = window.innerWidth <= 768;
     if (!compactDefault) ov.classList.add('open');
 
@@ -504,7 +504,7 @@
     ovHead.setAttribute('aria-expanded', compactDefault ? 'false' : 'true');
     ovHead.innerHTML = `
       <span class="ch2-overview-title">
-        <span class="ch2-badge">Unit V · Chapter 5 · 15 Syllabus Labs</span>
+        <span class="ch2-badge">Unit V · 15 Syllabus Labs</span>
         <span>Magnetism &amp; Superconductivity Virtual Laboratory Index</span>
         <span class="ch2-overview-sub">Open any syllabus experiment directly</span>
       </span>
@@ -629,7 +629,7 @@
   function renderPillBar() {
     const pillBar = document.getElementById('pillBar');
     pillBar.innerHTML = '';
-    pillBar.setAttribute('aria-label', 'Chapter 5 topics');
+    pillBar.setAttribute('aria-label', 'Unit V topics');
     CH5_TOPICS.forEach((t) => {
       const btn = window.XLab.el(
         'button',

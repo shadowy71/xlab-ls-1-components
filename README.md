@@ -1,8 +1,8 @@
 # Engineering Physics Interactive Simulator (Chapters 1, 2, 3, Units V & VI)
 
-A dependency-free HTML/CSS/JS educational platform covering **Semiconductor Physics**, **LASER & Optical Fibre**, **Quantum Mechanics**, **Magnetism & Superconductivity**, and **Introduction to Nanoscience** through interactive laboratories.
+A static HTML/CSS/JS educational platform covering **Semiconductor Physics**, **LASER & Optical Fibre**, **Quantum Mechanics**, **Quantum Computing**, **Magnetism & Superconductivity**, and **Introduction to Nanoscience** through interactive laboratories.
 
-**Open `index.html` in any modern browser or serve statically** — no build step, no external dependencies, no network calls.
+**Open `index.html` in any modern browser or serve statically** — no build step or network calls. Three.js and KaTeX are vendored locally and loaded on demand.
 
 ## Chapter 1: Semiconductor Physics (`index.html`)
 
@@ -84,7 +84,7 @@ Select **Unit VI / Nanoscience** in the existing course sidebar (use the course 
 
 PVD and gold link back to the preparation explorer and to each other. Application comparisons do not use invented performance scores. The 1D well is **not** a realistic 3D quantum-dot prediction. Mechanical strengthening is capped at small grains; magnetic thresholds, milling kinetics, gold populations and optical colours are explicitly illustrative, not measured data, yields, recipes or device specifications. PVD transport controls are independent of its prescribed substrate rate. The sensor uses a teaching time constant of 5 simulated seconds; changing the measurement interval changes sampling, not that physical response model.
 
-Controls use native labelled ranges/selects and visible keyboard focus. Topic navigation supports arrows, Home and End. Diagrams pan within their own focusable regions on narrow screens without overflowing the page; panning and focus survive animation updates. Reduced-motion preferences are observed live: ornamental particle motion stops, while explicitly requested process calculations continue at a reduced rendering cadence. No application dependencies, backend or database were added.
+Controls use native labelled ranges/selects and visible keyboard focus. Topic navigation supports arrows, Home and End. Diagrams pan within their own focusable regions on narrow screens without overflowing the page; panning and focus survive animation updates. Reduced-motion preferences are observed live: ornamental particle motion stops, while explicitly requested process calculations continue at a reduced rendering cadence. No backend or database is required.
 
 ### Verification
 
@@ -103,3 +103,13 @@ CHROME_BIN=/path/to/chromium node tests/ch6-browser.cjs
 ```
 
 It starts and closes its own temporary static server/browser profile. It checks all eight lessons, slider extremes, selectors, stages, calculations, play/pause/replay, keyboard navigation, 320/390/768/1024/1440 px layouts, SVG label bounds, light theme, runtime reduced motion, cleanup, rapid navigation and lazy-load retry. Without `CHROME_BIN` or a system Chromium it reports an explicit skip; it does not install packages or alter the platform.
+
+## Optional 3D and math rendering
+
+The original workspace and 2D labs remain available. Shared files under `src/ui/` and `src/visualization/` provide lazy-loaded Three.js r147, KaTeX 0.16.22, responsive camera controls, resource disposal and WebGL fallback. Unit III tunnelling shows an extrusion of the existing 1D probability density, not a 3D wavefunction; Unit VI ball milling displays the existing representative particle population as a schematic cutaway. Both retain their original models and graphs. `node tests/visualization-engine.cjs` checks the lifecycle contract.
+
+### Unit IV quantum computing
+
+The Unit IV labs use the shared, dependency-free `src/ch4/quantum-engine.js` state-vector implementation (q0 is the leftmost, most-significant bit). It provides complex arithmetic, gates, tensor products, measurement and collapse, and a calculated three-qubit teleportation protocol. Quantum hardware diagrams and the two-path analogy are conceptual; the mathematics and shot samples are simulated, not measurements from hardware. The Bloch sphere and physical hardware explorer are separate workspaces. The Bloch sphere renders the engine state in Three.js, supports orbit and click-to-prepare, and falls back to a 2D state view when WebGL is unavailable. Circuit steps, editing and measurement update that same state. The superconducting circuit is a conceptual 3D illustration; other platforms use distinct conceptual diagrams. The 3D dependencies are loaded on demand, and scenes and listeners are disposed when changing labs.
+
+Run `node tests/ch4-quantum.cjs` for the numerical checks. With a Chromium executable available, run `CHROME_BIN=/path/to/chromium node tests/ch4-browser.cjs` for browser integration and responsive checks.
