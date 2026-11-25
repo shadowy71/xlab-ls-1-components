@@ -1,6 +1,6 @@
-# Engineering Physics Interactive Simulator (Chapters 1, 2, 3 & Unit V)
+# Engineering Physics Interactive Simulator (Chapters 1, 2, 3, Units V & VI)
 
-A dependency-free HTML/CSS/JS application that teaches **Chapter 1: Semiconductor Physics**, **Chapter 2: LASER & Optical Fibre**, and **Chapter 3: Quantum Mechanics** through twenty interactive physics simulations.
+A dependency-free HTML/CSS/JS educational platform covering **Semiconductor Physics**, **LASER & Optical Fibre**, **Quantum Mechanics**, **Magnetism & Superconductivity**, and **Introduction to Nanoscience** through interactive laboratories.
 
 **Open `index.html` in any modern browser or serve statically** — no build step, no external dependencies, no network calls.
 
@@ -69,6 +69,37 @@ Nine lazy-loaded labs cover magnetic material classes and ordering temperatures;
 
 ## Unit VI: Introduction to Nanoscience (`src/ch6/`)
 
-Select **Unit VI** in the existing chapter navigation. Eight lazy-loaded laboratories cover scale and surface area, confinement, four material-property models, ball milling, PVD, colloidal gold, nanosensors, and optoelectronics and applications. Lesson model notes are available below each lab. The controls and synthetic curves are teaching models, not experimental measurements or process recipes. `models.js` separates calculations from the SVG interface; test the geometry, quantum and process calculations with `node tests/ch6-models.cjs`.
+Select **Unit VI / Nanoscience** in the existing course sidebar (use the course menu on mobile). The eight topic entries reuse the shared chapter workspace, controls pane, theme and animation loop. Each lesson has a short introduction, links to its controls, and expandable theory/model notes. `ch6-core.js` loads `models.js` and then `labs.js` only when this chapter is opened; switching lessons destroys the previous laboratory.
 
-The ball-milling lesson also contains the preparation-method comparison and links to PVD and colloidal synthesis. Milling histograms bin 80 representative model particles, not experimental data; the collisions are schematic and changes to parameters recompute the illustrative trajectory. In PVD, the selected substrate rate is prescribed independently of the qualitative source/transport controls. Gold stages, sensor calibration and device threshold are conceptual models, not process recipes or device specifications. The repository is a static site and does not define separate build or lint commands.
+| Lesson | Interactive experiment |
+|---|---|
+| 6.1 Scale | Logarithmic atom-to-hair comparison; exact sphere geometry; fixed-volume subdivision with area gain; surface-shell estimate; four normalized live graphs |
+| 6.2 Quantum | Infinite-well energy levels, dimensionless wavefunction shapes, effective mass/state/excitation controls, inverse-square spacing graph; a **separate illustrative** dot gap, spectrum and UV/visible emission |
+| 6.3 Properties | Optical absorption/scattering/transmission and spectrum-linked RGB estimate; signed toy I–V and electron drift; tension/compression and capped grain strengthening; reversible/blocked magnetic response with selectable sweep branch |
+| 6.4 Ball mill | Rotating cutaway, impacts, 80 representative particles shared with before/after histograms, mean-size trajectory, play/pause/reset and playback speed; top-down/bottom-up preparation explorer |
+| 6.5 PVD | Thermal evaporation or sputtering, vacuum transport, substrate/film, prescribed rate × time, thickness graph, progress and illustrative coverage |
+| 6.6 Gold colloid | Seven distinct stages with Next stage or continuous playback; reduction, nucleation, growth and stabilizer shells; population histogram and qualitative optical appearance |
+| 6.7 Sensors | Resistive/optical adsorption examples, saturation calibration, first-order response/recovery, adjustable measurement sampling interval and sampled output/history |
+| 6.8 Applications | Excitation/carriers/recombination or ideal photodetection; five domains with four inspectable examples each, material–property–purpose connections, conventional/nanostructured mechanisms and trade-offs |
+
+PVD and gold link back to the preparation explorer and to each other. Application comparisons do not use invented performance scores. The 1D well is **not** a realistic 3D quantum-dot prediction. Mechanical strengthening is capped at small grains; magnetic thresholds, milling kinetics, gold populations and optical colours are explicitly illustrative, not measured data, yields, recipes or device specifications. PVD transport controls are independent of its prescribed substrate rate. The sensor uses a teaching time constant of 5 simulated seconds; changing the measurement interval changes sampling, not that physical response model.
+
+Controls use native labelled ranges/selects and visible keyboard focus. Topic navigation supports arrows, Home and End. Diagrams pan within their own focusable regions on narrow screens without overflowing the page; panning and focus survive animation updates. Reduced-motion preferences are observed live: ornamental particle motion stops, while explicitly requested process calculations continue at a reduced rendering cadence. No application dependencies, backend or database were added.
+
+### Verification
+
+The repository is a static site with no separate build or lint command. Calculation tests need only Node:
+
+```sh
+node tests/ch2-photon-atom.cjs
+node tests/ch5-physics.cjs
+node tests/ch6-models.cjs
+```
+
+An optional **dependency-free browser test runner** uses an installed Chromium and Node 22+:
+
+```sh
+CHROME_BIN=/path/to/chromium node tests/ch6-browser.cjs
+```
+
+It starts and closes its own temporary static server/browser profile. It checks all eight lessons, slider extremes, selectors, stages, calculations, play/pause/replay, keyboard navigation, 320/390/768/1024/1440 px layouts, SVG label bounds, light theme, runtime reduced motion, cleanup, rapid navigation and lazy-load retry. Without `CHROME_BIN` or a system Chromium it reports an explicit skip; it does not install packages or alter the platform.
