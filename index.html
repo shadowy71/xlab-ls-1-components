@@ -472,6 +472,7 @@ select:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border
 <link rel="stylesheet" href="src/ch5/ch5.css">
 <link rel="stylesheet" href="src/ch6/ch6.css">
 <link rel="stylesheet" href="src/ui/workspace.css">
+<link rel="stylesheet" href="src/ui/visualization.css">
 </head>
 <body>
 
@@ -512,16 +513,16 @@ select:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border
   <aside class="course-sidebar" id="courseSidebar" aria-label="Course navigation">
     <div class="sidebar-scroll">
       <div class="sidebar-section-label">COURSE LIBRARY</div>
-      <div class="chapter-tabs" role="group" aria-label="Chapters">
-        <button class="chapter-tab active" data-chapter="1"><span class="chapter-number">01</span><span class="chapter-copy"><strong>Semiconductor physics</strong><small>Chapter 1</small></span></button>
-        <button class="chapter-tab" data-chapter="2"><span class="chapter-number">02</span><span class="chapter-copy"><strong>LASER &amp; optical fibre</strong><small>Chapter 2</small></span></button>
-        <button class="chapter-tab" data-chapter="3"><span class="chapter-number">03</span><span class="chapter-copy"><strong>Quantum mechanics</strong><small>Chapter 3</small></span></button>
-        <button class="chapter-tab" data-chapter="4"><span class="chapter-number">04</span><span class="chapter-copy"><strong>Quantum computing</strong><small>Chapter 4</small></span></button>
-        <button class="chapter-tab" data-chapter="5"><span class="chapter-number">05</span><span class="chapter-copy"><strong>Magnetism &amp; superconductivity</strong><small>Chapter 5</small></span></button>
-        <button class="chapter-tab" data-chapter="6"><span class="chapter-number">06</span><span class="chapter-copy"><strong>Nanoscience</strong><small>Chapter 6</small></span></button>
+      <div class="chapter-tabs" role="group" aria-label="Units">
+        <button class="chapter-tab active" data-chapter="1"><span class="chapter-number">01</span><span class="chapter-copy"><strong>Semiconductor physics</strong><small>Unit I</small></span></button>
+        <button class="chapter-tab" data-chapter="2"><span class="chapter-number">02</span><span class="chapter-copy"><strong>LASER &amp; optical fibre</strong><small>Unit II</small></span></button>
+        <button class="chapter-tab" data-chapter="3"><span class="chapter-number">03</span><span class="chapter-copy"><strong>Quantum mechanics</strong><small>Unit III</small></span></button>
+        <button class="chapter-tab" data-chapter="4"><span class="chapter-number">04</span><span class="chapter-copy"><strong>Quantum computing</strong><small>Unit IV</small></span></button>
+        <button class="chapter-tab" data-chapter="5"><span class="chapter-number">05</span><span class="chapter-copy"><strong>Magnetism &amp; superconductivity</strong><small>Unit V</small></span></button>
+        <button class="chapter-tab" data-chapter="6"><span class="chapter-number">06</span><span class="chapter-copy"><strong>Nanoscience</strong><small>Unit VI</small></span></button>
       </div>
-      <div class="sidebar-topic-heading"><span>IN THIS CHAPTER</span><span class="topic-count" id="topicCount"></span></div>
-      <div class="pill-bar"><div class="pill-bar-inner" id="pillBar" role="tablist" aria-label="Chapter 1 topics"></div></div>
+      <div class="sidebar-topic-heading"><span>IN THIS UNIT</span><span class="topic-count" id="topicCount"></span></div>
+      <div class="pill-bar"><div class="pill-bar-inner" id="pillBar" role="tablist" aria-label="Unit I topics"></div></div>
     </div>
     <div class="sidebar-foot"><span class="status-mark"></span><span>Interactive science lab</span></div>
   </aside>
@@ -733,7 +734,7 @@ let activeChapter = 1;
 
 function renderCh1Pills(){
   pillBar.innerHTML='';
-  pillBar.setAttribute('aria-label', 'Chapter 1 topics');
+  pillBar.setAttribute('aria-label', 'Unit I topics');
   TOPICS.forEach(t=>{
     const pill = el('button','pill'+(t.id===activeTopic?' active':''), `<span class="pill-icon" aria-hidden="true">${TOPIC_ICONS[t.id]}</span><span>${t.name}</span>`);
     pill.setAttribute('role','tab');
@@ -811,6 +812,7 @@ pillBar.addEventListener('keydown', (e)=>{
     window.Ch3Platform.handleKeydown(e);
     return;
   }
+  if(activeChapter === 4 && window.Ch4Platform){ window.Ch4Platform.handleKeydown(e); return; }
   if(activeChapter === 5 && window.Ch5Platform){ window.Ch5Platform.handleKeydown(e); return; }
   if(activeChapter === 6 && window.Ch6Platform){ window.Ch6Platform.handleKeydown(e); return; }
   const idx = TOPICS.findIndex(t=>t.id===activeTopic);
@@ -2781,10 +2783,13 @@ function animate(){
   const now = performance.now();
   const dt = Math.min((now-lastTime)/1000, 0.05);
   lastTime = now;
+  if(document.hidden){ requestAnimationFrame(animate); return; }
   if(activeChapter === 2 && window.Ch2Platform){
     window.Ch2Platform.tick(dt);
   } else if(activeChapter === 3 && window.Ch3Platform){
     window.Ch3Platform.tick(dt);
+  } else if(activeChapter === 4 && window.Ch4Platform){
+    window.Ch4Platform.tick(dt);
   } else if(activeChapter === 5 && window.Ch5Platform){
     window.Ch5Platform.tick(dt);
   } else if(activeChapter === 6 && window.Ch6Platform){
@@ -2833,7 +2838,7 @@ function switchChapter(ch){
     if(window.Ch3Platform) window.Ch3Platform.mount();
   } else if(target === 4){
     if(brand) brand.innerHTML = 'Quantum Computing <span class="logo-sub">Laboratories</span>';
-    document.title = 'Chapter 4 · Quantum Computing Laboratories';
+    document.title = 'Unit IV · Quantum Computing Laboratories';
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     if(window.Ch2Platform) window.Ch2Platform.unmount();
     if(window.Ch3Platform) window.Ch3Platform.unmount();
@@ -2927,6 +2932,7 @@ requestAnimationFrame(()=>{
   requestAnimationFrame(animate);
 });
 </script>
+<script defer src="src/ui/workspace.js"></script>
 <script defer src="src/ch2/ch2-core.js"></script>
 <script defer src="src/ch3/ch3-core.js"></script>
 <link rel="stylesheet" href="src/ch4/ch4.css">

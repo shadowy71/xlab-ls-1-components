@@ -1,0 +1,17 @@
+/* Shared scientific viewport primitives. Existing SVG/canvas workspaces remain intact. */
+.xlab-viewport-tools{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:10px 16px;border-bottom:1px solid var(--divider)}
+.xlab-viewport-tools button,.xlab-viewport-tools select,.xlab-inspect button{font:inherit;font-size:.76rem;color:var(--text);background:var(--recessed);border:1px solid var(--border-strong);border-radius:6px;padding:6px 9px;cursor:pointer}
+.xlab-viewport-tools button:focus-visible,.xlab-inspect button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.xlab-viewport-tools [aria-pressed=true]{border-color:var(--accent);color:var(--accent)}
+.xlab-viewport-3d{height:430px;min-width:0;position:relative;margin:14px 16px 0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--recessed)}
+.xlab-viewport-3d[hidden],.xlab-viewport-tools [hidden]{display:none}
+.xlab-viewport-3d canvas{width:100%;height:100%;display:block;touch-action:none}
+.xlab-viewport-3d:fullscreen{height:100vh;width:100vw;margin:0;background:var(--bg1)}
+.xlab-viewport-3d:fullscreen canvas{height:100%;width:100%}
+.xlab-inspect{padding:10px 16px;color:var(--text2);font-size:.8rem;line-height:1.5}
+.xlab-inspect button{margin:4px 4px 4px 0}.xlab-inspect p{margin:4px 0}.xlab-equation{overflow-x:auto;margin:.75rem 0}
+.nano-readouts{font-variant-numeric:tabular-nums}
+@media(max-width:640px){.xlab-viewport-3d{height:300px;margin:10px 10px 0}.xlab-viewport-tools{padding:8px 10px}}
+.xlab-viewport-status{color:var(--text2);font-size:.76rem;line-height:1.4;padding:0 16px}
+.xlab-viewport-status:empty{display:none}.xlab-viewport-group:fullscreen{background:var(--bg1);overflow:auto}.xlab-viewport-group:fullscreen .xlab-viewport-3d{height:calc(100vh - 180px)}
+.nano-control input.nano-number{width:100%;padding:6px 8px;border:1px solid var(--border-strong);border-radius:6px;background:var(--recessed);color:var(--text);font:inherit;font-variant-numeric:tabular-nums}.nano-control input.nano-number:focus-visible{outline:2px solid var(--accent);outline-offset:1px}

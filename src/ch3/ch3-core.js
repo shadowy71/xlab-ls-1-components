@@ -443,7 +443,7 @@
     // Collapsible 8-Topic Syllabus Index linking straight to every Simulation & Sub-lab
     const ov = el('section', 'ch3-overview');
     ov.id = 'ch3Overview';
-    ov.setAttribute('aria-label', 'Chapter 3 Quantum Mechanics Syllabus Index');
+    ov.setAttribute('aria-label', 'Unit III Quantum Mechanics Syllabus Index');
     const compactDefault = window.innerWidth <= 768;
     if (!compactDefault) ov.classList.add('open');
 
@@ -453,7 +453,7 @@
     ovHead.setAttribute('aria-expanded', compactDefault ? 'false' : 'true');
     ovHead.innerHTML = `
       <span class="ch2-overview-title">
-        <span class="ch2-badge">Chapter 3 · 8 Syllabus Labs</span>
+        <span class="ch2-badge">Unit III · 8 Syllabus Labs</span>
         <span>Quantum Mechanics Virtual Laboratory Index</span>
         <span class="ch2-overview-sub">Open any syllabus experiment directly</span>
       </span>
@@ -584,7 +584,7 @@
   function renderPillBar() {
     const pillBar = document.getElementById('pillBar');
     pillBar.innerHTML = '';
-    pillBar.setAttribute('aria-label', 'Chapter 3 topics');
+    pillBar.setAttribute('aria-label', 'Unit III topics');
     CH3_TOPICS.forEach((t) => {
       const btn = window.XLab.el(
         'button',
