@@ -15,7 +15,7 @@
     const stage = panel.querySelector('.nano-stage'), controls = panel.querySelector('.nano-controls'), out = panel.querySelector('.nano-readouts');
     panel.querySelector('.nano-notes').innerHTML = `<p>${notes[id]}</p>`;
     let drawingTarget = stage;
-    let state = {}, defaults = {}, playing = false, clock = 0, sensorResponse = 0, sensorHistory = [{ t:0, value:0 }], frameAccumulator = 0, dead = false, electronPhase = 0, sampleElapsed = 0;
+    let state = {}, defaults = {}, playing = false, clock = 0, sensorResponse = 0, sensorHistory = [{ t:0, value:0 }], frameAccumulator = 0, dead = false, electronPhase = 0, sampleElapsed = 0, view3d = null;
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     let reduced = motion.matches;
     function motionChanged(event) { reduced = event.matches; draw(); }
@@ -59,7 +59,15 @@
           if (key === 'mode' && (id === 7 || id === 2)) { playing = false; clock = 0; syncControls(); }
           updateVisibility(); syncControls(); draw();
         });
-        wrap.dataset.key = key; wrap.append(lab, input); controls.append(wrap);
+        wrap.dataset.key = key; wrap.append(lab, input);
+        if (type === 'range') {
+          const number = document.createElement('input'); number.type = 'number'; number.className = 'nano-number'; number.min = d[3]; number.max = d[4]; number.step = d[5]; number.value = state[key];
+          number.setAttribute('aria-label', label + ' numeric value' + (d[7] ? ' in ' + d[7] : ''));
+          input.addEventListener('input', () => { number.value = input.value; number.removeAttribute('aria-invalid'); });
+          number.addEventListener('change', () => { const value = Number(number.value); if (!number.value.trim() || !Number.isFinite(value)) { number.setAttribute('aria-invalid', 'true'); number.value = input.value; return; } input.value = Math.max(d[3], Math.min(d[4], value)); input.dispatchEvent(new Event('input', {bubbles:true})); number.value = input.value; });
+          wrap.append(number);
+        }
+        controls.append(wrap);
       });
       const actions = document.createElement('div'); actions.className = 'nano-actions';
       if ([0, 2, 3, 4, 5, 6, 7].includes(id)) {
@@ -71,9 +79,14 @@
             if (id === 3 && state.duration >= 60) { state.duration = 0; clock = 0; }
             if (id === 4 && state.time >= 120 || id === 5 && M.gold(state.time, state.prec, state.red, state.temp, state.mix, state.stab).progress >= 1) { state.time = 0; clock = 0; }
           }
-          playing = !playing; syncControls(); draw();
+          playing = !playing; if (view3d) { if (playing) view3d.play(); else view3d.pause(); } syncControls(); draw();
         };
         actions.append(play);
+      }
+      if (id === 3) {
+        const step = document.createElement('button'); step.type = 'button'; step.textContent = 'Step 1 min';
+        step.onclick = () => { playing = false; if (view3d) view3d.pause(); state.duration = Math.min(60, state.duration + 1); clock += .5; syncControls(); draw(); };
+        actions.append(step);
       }
       if (id === 5) {
         const next = document.createElement('button'); next.type = 'button'; next.textContent = 'Next stage';
@@ -86,7 +99,7 @@
         actions.append(next);
       }
       const reset = document.createElement('button'); reset.type = 'button'; reset.textContent = 'Reset';
-      reset.onclick = () => { state = { ...defaults }; playing = false; clock = 0; sensorResponse = 0; sensorHistory = [{ t:0, value:0 }]; electronPhase = 0; sampleElapsed = 0; frameAccumulator = 0; buildControls(); draw(); controls.querySelector('button:last-child').focus(); };
+      reset.onclick = () => { state = { ...defaults }; playing = false; clock = 0; sensorResponse = 0; sensorHistory = [{ t:0, value:0 }]; electronPhase = 0; sampleElapsed = 0; frameAccumulator = 0; if (view3d) { view3d.pause(); view3d.reset(); } buildControls(); draw(); controls.querySelector('button:last-child').focus(); };
       actions.append(reset); controls.append(actions); updateVisibility(); syncControls();
     }
     function updateVisibility() {
@@ -112,6 +125,27 @@
       const play = controls.querySelector('[data-action=play]');
       if (play && id === 7) play.hidden = !(mode === 'Light-emitting' || mode === 'Photodetection');
       if (play && id === 2) play.hidden = mode !== 'Electrical';
+    }
+    function setupMath() {
+      const notesEl = panel.querySelector('.nano-notes');
+      const equations = {
+        0: [String.raw`A=4\pi r^2,\quad V=\frac{4}{3}\pi r^3,\quad \frac{A}{V}=\frac{3}{r}`, 'A = 4πr²; V = 4πr³/3; A/V = 3/r'],
+        1: [String.raw`E_n=\frac{n^2 h^2}{8m^*L^2},\qquad E=\frac{hc}{\lambda}`, 'En = n²h²/(8m*L²); E = hc/λ'],
+        3: [String.raw`d_i(t)=d_{i,0}\left(0.08+0.92e^{-k_i t}\right)`, 'Representative particle size = initial size × illustrative decay factor'],
+        4: [String.raw`d=Rt`, 'Film thickness = rate × time'],
+        7: [String.raw`E=\frac{hc}{\lambda}`, 'E = hc/λ']
+      };
+      if (!equations[id]) return;
+      const el = document.createElement('div'); el.className = 'xlab-equation'; el.dataset.tex = equations[id][0]; el.dataset.display = 'true'; el.textContent = equations[id][1]; notesEl.append(el);
+      const details = panel.querySelector('.nano-theory'); details.addEventListener('toggle', () => { if (details.open && window.XLabWorkspace) window.XLabWorkspace.math(notesEl).catch(() => {}); });
+    }
+    function setup3D() {
+      if (id !== 3 || !window.XLabWorkspace) return;
+      view3d = window.XLabWorkspace.attach3D(stage, {
+        openLabel:'Open 3D cutaway', closeLabel:'Close 3D cutaway', script:'src/ch6/ball-mill-3d.js',
+        instructions:'Drag to orbit · scroll to zoom · right-drag to pan. Select a component or use the buttons. Geometry and motion are schematic, not to scale.',
+        parts:['Chamber','Milling balls','Powder','Drive'], snapshot:() => ({state,clock}), mount:(host,describe,onLost) => window.XLabBallMill3D.mount(host,describe,onLost)
+      });
     }
     function preparationExplorer() {
       if (id !== 3) return;
@@ -238,6 +272,7 @@
           const text = controlValue(d);
           el.previousElementSibling.querySelector('output').textContent = text;
           el.setAttribute('aria-valuetext', text);
+          const number = el.parentElement.querySelector('.nano-number'); if (number && document.activeElement !== number) number.value = Number(state[d[0]].toFixed(2));
         }
       });
       const b = controls.querySelector('[data-action=play]');
@@ -803,12 +838,13 @@
         else stage.append(next);
       });
       while (stage.childNodes.length > children.length) stage.lastChild.remove();
+      if (view3d) view3d.update({state,clock});
       stage.querySelectorAll('.nano-viz').forEach((wrap, i) => {
         if (i === focused && document.activeElement !== wrap) wrap.focus({ preventScroll:true });
         wrap.scrollLeft = scroll[i] || 0;
       });
     }
-    buildControls(); preparationExplorer(); crossLinks(); draw();
+    buildControls(); setupMath(); setup3D(); preparationExplorer(); crossLinks(); draw();
     return {
       tick(dt) {
         if (dead || !Number.isFinite(dt) || dt <= 0 || !playing) return;
@@ -845,7 +881,7 @@
           draw();
         }
       },
-      destroy() { dead = true; playing = false; motion.removeEventListener('change', motionChanged); }
+      destroy() { dead = true; playing = false; if (view3d) view3d.destroy(); view3d = null; motion.removeEventListener('change', motionChanged); }
     };
   }
   window.Ch6Labs = { create };
